@@ -1,0 +1,7 @@
+cd Desktop\DANIEL\AdvancedTradingBot
+git init
+git add .
+git commit -m "Primera version del bot"
+git branch -M main
+git remote add origin https://github.com/TU-USUARIO/AdvancedTradingBot.git
+git push -u origin main

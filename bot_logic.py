@@ -38,6 +38,18 @@ def get_portfolio_from_sheet(url):
         print(f"Error reading sheet: {e}")
         return []
 
+def get_market_gain(url):
+    try:
+        df = pd.read_csv(url)
+        for index, row in df.iterrows():
+            if len(row) >= 12:
+                if str(row.iloc[10]).strip() == "Ganancia del Mercado:":
+                    return str(row.iloc[11]).strip()
+        return "N/A"
+    except Exception as e:
+        print(f"Error reading market gain: {e}")
+        return "N/A"
+
 def analyze_stock(ticker):
     try:
         # Fetch 6 months of data

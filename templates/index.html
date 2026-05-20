@@ -33,6 +33,12 @@
                     <h2>Tu Portafolio (Google Sheet)</h2>
                     <button class="refresh-btn" id="refresh-portfolio" title="Actualizar">↻</button>
                 </div>
+                
+                <div class="market-gain-box" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #9ca3af; font-size: 0.9rem; font-weight: 500;">Ganancia del Mdo (USD)</span>
+                    <span id="market-gain-display" style="color: #10b981; font-size: 1.5rem; font-weight: 700;">Cargando...</span>
+                </div>
+
                 <div class="loader" id="portfolio-loader">Conectando con tu Google Sheet y analizando...</div>
                 <div class="grid" id="portfolio-grid" style="display: none;">
                     <!-- Cards de mi cartera -->

@@ -15,8 +15,15 @@ def api_portfolio():
     tickers = get_portfolio_from_sheet(GOOGLE_SHEET_CSV_URL)
     if not tickers:
         tickers = ['SPY', 'QQQ', 'AAPL'] # Fallback por si falla el sheet
+    
+    from bot_logic import get_market_gain
+    market_gain = get_market_gain(GOOGLE_SHEET_CSV_URL)
     data = get_portfolio_status(tickers)
-    return jsonify(data)
+    
+    return jsonify({
+        "market_gain": market_gain,
+        "portfolio": data
+    })
 
 @app.route('/api/opportunities')
 def api_opportunities():

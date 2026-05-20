@@ -9,7 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/portfolio');
             const data = await res.json();
-            renderCards(data, 'portfolio-grid', false);
+            
+            if (data.market_gain && data.market_gain !== "N/A") {
+                const gainDisplay = document.getElementById('market-gain-display');
+                if (gainDisplay) gainDisplay.innerText = data.market_gain;
+            }
+            
+            renderCards(data.portfolio || data, 'portfolio-grid', false);
         } catch (error) {
             console.error('Error fetching portfolio:', error);
             document.getElementById('portfolio-loader').innerText = 'Error al cargar los datos de la cartera.';

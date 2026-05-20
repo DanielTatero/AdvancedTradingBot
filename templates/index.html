@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Trading Bot</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">📈</span>
+                <h1>Bull Market <span class="highlight">Pro</span></h1>
+            </div>
+            <div class="status-indicator">
+                <div class="pulse-dot"></div>
+                <span>Motor IA Conectado</span>
+            </div>
+        </header>
+
+        <!-- Pestañas (Tabs) -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('portfolio')">💼 Mis Acciones</button>
+            <button class="tab-btn" onclick="switchTab('opportunities')">🚀 Recomendadas</button>
+        </div>
+
+        <main class="dashboard">
+            <!-- Solapa: Mi Cartera -->
+            <section id="portfolio-tab" class="panel tab-content active-tab">
+                <div class="panel-header">
+                    <h2>Tu Portafolio (Google Sheet)</h2>
+                    <button class="refresh-btn" id="refresh-portfolio" title="Actualizar">↻</button>
+                </div>
+                <div class="loader" id="portfolio-loader">Conectando con tu Google Sheet y analizando...</div>
+                <div class="grid" id="portfolio-grid" style="display: none;">
+                    <!-- Cards de mi cartera -->
+                </div>
+            </section>
+
+            <!-- Solapa: Recomendadas -->
+            <section id="opportunities-tab" class="panel tab-content">
+                <div class="panel-header">
+                    <h2>Oportunidades IA</h2>
+                    <button class="refresh-btn" id="refresh-opportunities" title="Actualizar">↻</button>
+                </div>
+                <div class="loader" id="opportunities-loader">Escaneando mercado en busca de patrones...</div>
+                <p class="subtitle" style="color: #9ca3af; margin-bottom: 20px;">* Haz clic en cualquier tarjeta para ver el análisis detallado.</p>
+                <div class="grid" id="opportunities-grid" style="display: none;">
+                    <!-- Cards de recomendadas -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal (Ventana Emergente para el Análisis) -->
+    <div id="analysis-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Análisis</h2>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modal-body" class="modal-body">
+                <!-- El texto de análisis va aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

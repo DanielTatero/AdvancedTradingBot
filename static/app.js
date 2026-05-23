@@ -86,9 +86,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span style="font-size: 0.8rem; color: #9ca3af;">Entrada Sugerida</span>
                             <span style="font-size: 0.9rem; font-weight: 600; color: #10b981;">~$${item.entry_price}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                             <span style="font-size: 0.8rem; color: #9ca3af;">Toma Ganancia</span>
                             <span style="font-size: 0.9rem; font-weight: 600; color: #3b82f6;">$${item.take_profit}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.8rem; color: #9ca3af;">Stop Loss</span>
+                            <span style="font-size: 0.9rem; font-weight: 600; color: #ef4444;">$${item.stop_loss}</span>
                         </div>
                     </div>
                 `;

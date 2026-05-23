@@ -82,23 +82,23 @@ def analyze_stock(ticker, is_candidate=False):
             # 1. Cotiza en NYSE o NASDAQ
             if exchange not in ['NYQ', 'NMS', 'NYSE', 'NASDAQ']:
                 return None
-            # 2. Capitalizacion minima: USD 5.000 millones
-            if market_cap < 5_000_000_000:
+            # 2. Capitalizacion minima: USD 2.000 millones (Acepta Mid-Caps de crecimiento)
+            if market_cap < 2_000_000_000:
                 return None
-            # 3. Consenso de analistas: minimo "Buy"
-            if recommendation not in ['buy', 'strong_buy']:
+            # 3. Consenso de analistas: minimo "Buy" o "Hold" (damos mas margen para rebotes técnicos)
+            if recommendation not in ['buy', 'strong_buy', 'hold']:
                 return None
-            # 4. Upside minimo: 25%
-            if upside < 0.25:
+            # 4. Upside minimo: 12% (Más realista para trades de corto/mediano plazo)
+            if upside < 0.12:
                 return None
             # 5. NO incluir acciones argentinas
             if country == 'Argentina' or ticker in ['GGAL', 'YPF', 'PAMP', 'BMA', 'CEPU', 'TGS', 'LOMA', 'SUPV']:
                 return None
-            # 6. NO incluir acciones sin earnings positivos consistentes
+            # 6. NO incluir acciones sin earnings positivos consistentes (calidad aceptable)
             if not (trailing_pe > 0 or forward_pe > 0):
                 return None
-            # 8. Volatilidad aceptable: beta menor a 2.0
-            if beta >= 2.0:
+            # 8. Volatilidad aceptable: beta menor a 3.0 (Permite acciones "picantes" de alto beta)
+            if beta >= 3.0:
                 return None
 
         current_rsi = df['RSI'].iloc[-1]
@@ -121,16 +121,16 @@ def analyze_stock(ticker, is_candidate=False):
         # Precios sugeridos
         entrada_sugerida = round(lower_band, 2) if current_price > lower_band else round(current_price, 2)
         take_profit = round(target_mean, 2) if target_mean else (round(upper_band, 2) if not pd.isna(upper_band) else "N/A")
-        stop_loss = round(entrada_sugerida * 0.85, 2)
+        stop_loss = round(entrada_sugerida * 0.92, 2) # Ajustado a -8% para trades cortos y picantes
 
         analysis_text = f"<h4>{ticker} - {short_name}</h4>"
         analysis_text += f"<ul>"
         analysis_text += f"<li><strong>Precio actual:</strong> ${round(current_price, 2)} | <strong>Entrada sugerida:</strong> ${entrada_sugerida}</li>"
-        analysis_text += f"<li><strong>Take Profit:</strong> ${take_profit} (Justificado con price target de analistas y/o bandas de volatilidad)</li>"
-        analysis_text += f"<li><strong>Stop Loss:</strong> ${stop_loss} (-15% del precio de entrada)</li>"
-        analysis_text += f"<li><strong>Por qué encaja con tu perfil:</strong> Cumple criterios estrictos (Beta {round(beta, 2)} < 2.0, Market Cap ${market_cap/1e9:.1f}B, Consenso '{recommendation}', Upside {round(upside*100, 1)}%). Se ajusta a tu horizonte de largo plazo y aporta crecimiento de capital.</li>"
-        analysis_text += f"<li><strong>Riesgo principal a monitorear:</strong> Volatilidad de mercado y cambios en proyecciones de earnings. (Nota legal: Libre de problemas regulatorios activos según filtros básicos).</li>"
-        analysis_text += f"<li><strong>Tiempo estimado:</strong> Largo plazo (12 a 24 meses para alcanzar el Take Profit).</li>"
+        analysis_text += f"<li><strong>Take Profit:</strong> ${take_profit} (Objetivo de ganancia o media de analistas)</li>"
+        analysis_text += f"<li><strong>Stop Loss CORTITO:</strong> ${stop_loss} (-8% del precio de entrada para cortar pérdidas rápido)</li>"
+        analysis_text += f"<li><strong>Por qué encaja:</strong> Trade dinámico. Beta de {round(beta, 2)} (volatilidad a favor), Upside {round(upside*100, 1)}%. Calidad aceptable (PE positivo, Market Cap ${market_cap/1e9:.1f}B). Ideal para sumar capital al portfolio principal.</li>"
+        analysis_text += f"<li><strong>Riesgo:</strong> Al ser un trade más 'picante', respetá el Stop Loss a rajatabla.</li>"
+        analysis_text += f"<li><strong>Tiempo estimado:</strong> Corto/Mediano plazo (1 a 6 meses).</li>"
         analysis_text += f"</ul>"
         
         return {

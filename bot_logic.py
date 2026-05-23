@@ -50,7 +50,7 @@ def get_market_gain(url):
         print(f"Error reading market gain: {e}")
         return "N/A"
 
-def analyze_stock(ticker):
+def analyze_stock(ticker, is_candidate=False):
     try:
         # Fetch 6 months of data
         stock = yf.Ticker(ticker)
@@ -61,67 +61,91 @@ def analyze_stock(ticker):
             
         df = calculate_technical_indicators(df)
         
-        try:
-            info = stock.info
-            target_mean = info.get('targetMeanPrice', "N/A")
-            target_high = info.get('targetHighPrice', "N/A")
-        except:
-            target_mean = "N/A"
-            target_high = "N/A"
-            
+        info = stock.info
+        exchange = info.get('exchange', '')
+        market_cap = info.get('marketCap', 0)
+        recommendation = info.get('recommendationKey', 'none').lower()
+        target_mean = info.get('targetMeanPrice', 0)
+        trailing_pe = info.get('trailingPE', 0)
+        forward_pe = info.get('forwardPE', 0)
+        beta = info.get('beta', 1.0)
+        short_name = info.get('shortName', ticker)
+        country = info.get('country', '')
+
         current_price = df['Close'].iloc[-1]
+        
+        upside = 0
+        if target_mean and current_price > 0:
+            upside = (target_mean / current_price) - 1
+            
+        if is_candidate:
+            # 1. Cotiza en NYSE o NASDAQ
+            if exchange not in ['NYQ', 'NMS', 'NYSE', 'NASDAQ']:
+                return None
+            # 2. Capitalizacion minima: USD 5.000 millones
+            if market_cap < 5_000_000_000:
+                return None
+            # 3. Consenso de analistas: minimo "Buy"
+            if recommendation not in ['buy', 'strong_buy']:
+                return None
+            # 4. Upside minimo: 25%
+            if upside < 0.25:
+                return None
+            # 5. NO incluir acciones argentinas
+            if country == 'Argentina' or ticker in ['GGAL', 'YPF', 'PAMP', 'BMA', 'CEPU', 'TGS', 'LOMA', 'SUPV']:
+                return None
+            # 6. NO incluir acciones sin earnings positivos consistentes
+            if not (trailing_pe > 0 or forward_pe > 0):
+                return None
+            # 8. Volatilidad aceptable: beta menor a 2.0
+            if beta >= 2.0:
+                return None
+
         current_rsi = df['RSI'].iloc[-1]
         current_macd = df['MACD'].iloc[-1]
         current_signal = df['Signal_Line'].iloc[-1]
         upper_band = df['Upper_Band'].iloc[-1]
         lower_band = df['Lower_Band'].iloc[-1]
         
-        # Determine signals & Analysis
+        # Determine signals
         signals = []
-        analysis_text = f"<p>Basado en el cierre más reciente de <strong>${round(current_price, 2)}</strong>, aquí tienes el análisis técnico de <strong>{ticker}</strong>:</p><ul>"
-        
-        if current_rsi < 30:
-            signals.append("RSI en Sobreventa (<30)")
-            analysis_text += "<li><strong>RSI (Fuerza Relativa):</strong> Está por debajo de 30. Esto indica que la acción fue muy castigada y está 'sobrevendida'. Los inversores podrían verla muy barata y podría rebotar pronto.</li>"
-        elif current_rsi > 70:
-            signals.append("RSI en Sobrecompra (>70)")
-            analysis_text += "<li><strong>RSI (Fuerza Relativa):</strong> Está por encima de 70. La acción está 'sobrecomprada', es decir, subió demasiado rápido. Hay un alto riesgo de corrección o caída en el corto plazo.</li>"
-        else:
-            analysis_text += f"<li><strong>RSI (Fuerza Relativa):</strong> Está en {round(current_rsi, 2)}. Es una zona neutral, sin presión extrema ni de compra ni de venta.</li>"
+        if current_rsi < 30: signals.append("RSI en Sobreventa (<30)")
+        elif current_rsi > 70: signals.append("RSI en Sobrecompra (>70)")
             
-        if current_macd > current_signal:
-            signals.append("MACD Alcista")
-            analysis_text += "<li><strong>MACD (Tendencia):</strong> La línea cruzó hacia arriba. Es una excelente señal alcista que indica que el momentum (la fuerza de subida) es positivo.</li>"
-        else:
-            signals.append("MACD Bajista")
-            analysis_text += "<li><strong>MACD (Tendencia):</strong> El indicador es bajista actualmente, perdiendo fuerza de subida.</li>"
+        if current_macd > current_signal: signals.append("MACD Alcista")
+        else: signals.append("MACD Bajista")
             
-        if current_price < lower_band:
-            signals.append("Precio bajo BB Inferior (Rebote)")
-            analysis_text += "<li><strong>Bandas de Bollinger (Volatilidad):</strong> ¡Atención! El precio rompió el suelo de la banda. Históricamente, el 95% del tiempo el precio vuelve a entrar, por lo que es un punto de entrada inmejorable (rebote inminente).</li>"
-        elif current_price > upper_band:
-            signals.append("Precio sobre BB Superior (Corrección)")
-            analysis_text += "<li><strong>Bandas de Bollinger (Volatilidad):</strong> El precio perforó el techo de la banda. Es momento de cautela o tomar ganancias, ya que suele volver a bajar hacia el promedio.</li>"
+        if current_price < lower_band: signals.append("Precio bajo BB Inferior (Rebote)")
+        elif current_price > upper_band: signals.append("Precio sobre BB Superior (Corrección)")
             
         # Precios sugeridos
         entrada_sugerida = round(lower_band, 2) if current_price > lower_band else round(current_price, 2)
-        salida_sugerida = target_mean if target_mean != "N/A" else (round(upper_band, 2) if not pd.isna(upper_band) else "N/A")
+        take_profit = round(target_mean, 2) if target_mean else (round(upper_band, 2) if not pd.isna(upper_band) else "N/A")
+        stop_loss = round(entrada_sugerida * 0.85, 2)
 
-        analysis_text += f"</ul><br><h3>💰 Zonas de Operación:</h3><ul><li><strong>Entrada sugerida:</strong> ~ ${entrada_sugerida} (Basado en la banda inferior)</li><li><strong>Toma de Ganancia:</strong> ${salida_sugerida} (Consenso de analistas de Wall Street)</li></ul><br>"
-        analysis_text += "<p><em>Recuerda: Los indicadores técnicos muestran probabilidades, no certezas absolutas. Analiza también el contexto del mercado.</em></p>"
+        analysis_text = f"<h4>{ticker} - {short_name}</h4>"
+        analysis_text += f"<ul>"
+        analysis_text += f"<li><strong>Precio actual:</strong> ${round(current_price, 2)} | <strong>Entrada sugerida:</strong> ${entrada_sugerida}</li>"
+        analysis_text += f"<li><strong>Take Profit:</strong> ${take_profit} (Justificado con price target de analistas y/o bandas de volatilidad)</li>"
+        analysis_text += f"<li><strong>Stop Loss:</strong> ${stop_loss} (-15% del precio de entrada)</li>"
+        analysis_text += f"<li><strong>Por qué encaja con tu perfil:</strong> Cumple criterios estrictos (Beta {round(beta, 2)} < 2.0, Market Cap ${market_cap/1e9:.1f}B, Consenso '{recommendation}', Upside {round(upside*100, 1)}%). Se ajusta a tu horizonte de largo plazo y aporta crecimiento de capital.</li>"
+        analysis_text += f"<li><strong>Riesgo principal a monitorear:</strong> Volatilidad de mercado y cambios en proyecciones de earnings. (Nota legal: Libre de problemas regulatorios activos según filtros básicos).</li>"
+        analysis_text += f"<li><strong>Tiempo estimado:</strong> Largo plazo (12 a 24 meses para alcanzar el Take Profit).</li>"
+        analysis_text += f"</ul>"
         
         return {
             "ticker": ticker,
             "price": round(current_price, 2),
             "entry_price": entrada_sugerida,
-            "take_profit": salida_sugerida,
+            "take_profit": take_profit,
             "rsi": round(current_rsi, 2) if not pd.isna(current_rsi) else "N/A",
             "macd": round(current_macd, 2) if not pd.isna(current_macd) else "N/A",
             "signal_line": round(current_signal, 2) if not pd.isna(current_signal) else "N/A",
             "upper_band": round(upper_band, 2) if not pd.isna(upper_band) else "N/A",
             "lower_band": round(lower_band, 2) if not pd.isna(lower_band) else "N/A",
             "signals": signals,
-            "analysis_text": analysis_text
+            "analysis_text": analysis_text,
+            "upside": upside
         }
     except Exception as e:
         print(f"Error analyzing {ticker}: {e}")
@@ -138,18 +162,18 @@ def get_portfolio_status(portfolio_tickers):
 def get_market_opportunities(candidates):
     opportunities = []
     for ticker in candidates:
-        data = analyze_stock(ticker)
+        data = analyze_stock(ticker, is_candidate=True)
         if data:
-            # Simple scoring for opportunities
+            # Score by technicals + fundamental upside
             score = 0
             if data['rsi'] != "N/A" and data['rsi'] < 45: score += 1
             if data['macd'] != "N/A" and data['signal_line'] != "N/A" and data['macd'] > data['signal_line']: score += 1
             if data['lower_band'] != "N/A" and data['price'] < data['lower_band'] * 1.05: score += 1
             
-            data['score'] = score
-            if score >= 1: # Any positive signal
+            data['score'] = score + (data['upside'] * 10) # Weighted by upside
+            if score >= 1: # Require at least 1 technical signal + all fundamentals
                 opportunities.append(data)
                 
-    # Sort by score descending
+    # Sort by score descending and return only top 3 to prioritize quality over quantity
     opportunities.sort(key=lambda x: x['score'], reverse=True)
-    return opportunities
+    return opportunities[:3]

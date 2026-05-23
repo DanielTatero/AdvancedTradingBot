@@ -4,7 +4,7 @@ from bot_logic import get_portfolio_status, get_market_opportunities, get_portfo
 app = Flask(__name__)
 
 GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgzLERS_DHab2QVnkbaJ5ai41K6IHHyBGb7ZkOZpXVMhuYLfnw7UEBL8MRihA7LX3BdZ8Dat4JjzEf/pub?gid=685213890&single=true&output=csv"
-CANDIDATES = ['PLTR', 'CRWD', 'SNOW', 'UBER', 'SHOP', 'COIN', 'NU', 'SQ', 'AMD', 'TSLA', 'GGAL', 'YPF', 'PAMP', 'BMA', 'CEPU', 'TGS', 'LOMA']
+CANDIDATES = ['PLTR', 'CRWD', 'SNOW', 'UBER', 'SHOP', 'COIN', 'NU', 'SQ', 'AMD', 'TSLA', 'GOOGL', 'AMZN', 'META', 'NFLX', 'CRM']
 
 @app.route('/')
 def index():

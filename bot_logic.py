@@ -138,6 +138,7 @@ def analyze_stock(ticker, is_candidate=False):
             "price": round(current_price, 2),
             "entry_price": entrada_sugerida,
             "take_profit": take_profit,
+            "stop_loss": stop_loss,
             "rsi": round(current_rsi, 2) if not pd.isna(current_rsi) else "N/A",
             "macd": round(current_macd, 2) if not pd.isna(current_macd) else "N/A",
             "signal_line": round(current_signal, 2) if not pd.isna(current_signal) else "N/A",

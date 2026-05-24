@@ -1,0 +1,31 @@
+name: Alerta Diaria de Entrada
+
+on:
+  schedule:
+    # Corre lunes a viernes a las 17:00 UTC (14:00hs Argentina en verano)
+    - cron: '0 17 * * 1-5'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub cuando quieras
+
+jobs:
+  revisar-entradas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Revisar precios de entrada y alertar
+        env:
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: python alert_entry.py
